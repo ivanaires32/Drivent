@@ -12,9 +12,22 @@ async function getHotels(userId: number) {
 
     const hotels = await hotelsRepository.getHotels()
     return hotels
+}
 
+async function getRooms(userId: number, idHotel: number) {
+    const user = await hotelsRepository.getUser(userId)
+    const ticket = await hotelsRepository.getTicket(userId)
+    const hotel = await hotelsRepository.getHotel(idHotel)
+    if (!user || !ticket || !hotel) throw notFoundError()
+    if (ticket.status === "RESERVED"
+        || ticket.TicketType.includesHotel === false
+        || ticket.TicketType.isRemote === true) throw paymentRequired()
+
+    const rooms = await hotelsRepository.getRooms(idHotel)
+    return rooms
 }
 
 export const hotelsService = {
-    getHotels
+    getHotels,
+    getRooms
 }

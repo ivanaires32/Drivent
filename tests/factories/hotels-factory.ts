@@ -31,3 +31,14 @@ export async function createHotel() {
         }
     })
 }
+
+export async function createTicketHotel() {
+    return await prisma.ticketType.create({
+        data: {
+            name: faker.name.findName(),
+            price: faker.datatype.number(),
+            isRemote: false,
+            includesHotel: true,
+        },
+    });
+}

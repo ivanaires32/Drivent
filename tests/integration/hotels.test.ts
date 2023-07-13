@@ -6,7 +6,7 @@ import * as jwt from "jsonwebtoken"
 import { createEnrollmentWithAddress, createTicket, createTicketType, createUser, generateCreditCardData } from "../factories";
 import { prisma } from "@/config";
 import { cleanDb, generateValidToken } from "../helpers";
-import { createHotel } from "../factories/hotels-factory";
+import { createHotel, createTicketHotel } from "../factories/hotels-factory";
 import { TicketStatus } from "@prisma/client";
 
 const server = supertest(app)
@@ -46,21 +46,16 @@ describe("GET /hotels authorization", () => {
 
 describe("when token is valid", () => {
 
-    it("Any error", async () => {
-        const token = await generateValidToken()
-        const result = await server.get("hotels").set("Authorization", `Bearer ${token}`)
-
-        expect(result.status).toBe(httpStatus.BAD_REQUEST)
-    })
-
     it("returns 404 when subscription does not exist", async () => {
-        const result = await server.get("/hotels")
+        const token = await generateValidToken()
+        const result = await server.get("/hotels").set("Authorization", `Bearer ${token}`)
+
         expect(result.status).toBe(httpStatus.NOT_FOUND)
     })
 
     it("returns 404 when ticket does not exist", async () => {
         const user = await createUser()
-        const token = generateValidToken(user)
+        const token = await generateValidToken(user)
         await createEnrollmentWithAddress(user)
 
         const result = await server.get("/hotels").set("Authorization", `Bearer ${token}`)
@@ -70,12 +65,12 @@ describe("when token is valid", () => {
 
     it("returns 404 when hotel does not exist", async () => {
         const user = await createUser()
-        const token = generateValidToken(user)
+        const token = await generateValidToken(user)
         const enrollment = await createEnrollmentWithAddress(user)
-        const ticketType = await createTicketType()
+        const ticketType = await createTicketHotel()
         await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID)
 
-        const result = await server.get("/hotels/1").set("Authorization", `Bearer ${token}`)
+        const result = await server.get("/hotels/3").set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(httpStatus.NOT_FOUND)
     })
@@ -134,14 +129,7 @@ describe("when token is valid", () => {
         const user = await createUser()
         const token = await generateValidToken(user)
         const enrollment = await createEnrollmentWithAddress(user)
-        const ticketType = await prisma.ticketType.create({
-            data: {
-                name: faker.name.findName(),
-                price: faker.datatype.number(),
-                isRemote: false,
-                includesHotel: true,
-            },
-        });
+        const ticketType = await createTicketHotel()
         await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID)
         await createHotel()
         await createHotel()
@@ -166,7 +154,7 @@ describe("when token is valid", () => {
         const user = await createUser()
         const token = await generateValidToken(user)
         const enrollment = await createEnrollmentWithAddress(user)
-        const ticketType = await createTicketType()
+        const ticketType = await createTicketHotel()
         await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID)
         const hotel = await createHotel()
 
