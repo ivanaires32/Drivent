@@ -1,4 +1,5 @@
 import { prisma } from "@/config";
+import { createHotel } from "../../factories/hotels-factory";
 
 
 async function getHotels() {
@@ -39,13 +40,14 @@ async function getHotel(idHotel: number) {
 }
 
 async function getRooms(idHotel: number) {
-    return await prisma.room.findMany({
+    return await prisma.hotel.findFirst({
         where: {
-            hotelId: idHotel
+            id: idHotel
+        }, include: {
+            Rooms: true
         }
     })
 }
-
 
 export const hotelsRepository = {
     getHotels,
