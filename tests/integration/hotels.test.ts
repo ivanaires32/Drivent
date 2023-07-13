@@ -63,6 +63,18 @@ describe("when token is valid", () => {
         expect(result.status).toBe(httpStatus.NOT_FOUND)
     })
 
+    it("returns 404 when there are no hotels", async () => {
+        const user = await createUser()
+        const token = await generateValidToken(user)
+        const enrollment = await createEnrollmentWithAddress(user)
+        const ticketType = await createTicketHotel()
+        await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID)
+
+        const result = await server.get("/hotels").set("Authorization", `Bearer ${token}`)
+
+        expect(result.status).toBe(httpStatus.NOT_FOUND)
+    })
+
     it("returns 404 when hotel does not exist", async () => {
         const user = await createUser()
         const token = await generateValidToken(user)
@@ -70,7 +82,7 @@ describe("when token is valid", () => {
         const ticketType = await createTicketHotel()
         await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID)
 
-        const result = await server.get("/hotels/3").set("Authorization", `Bearer ${token}`)
+        const result = await server.get("/hotels/1").set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(httpStatus.NOT_FOUND)
     })
@@ -141,6 +153,7 @@ describe("when token is valid", () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     id: expect.any(Number),
+                    name: expect.any(String),
                     image: expect.any(String),
                     createdAt: expect.any(String),
                     updatedAt: expect.any(String)
@@ -161,16 +174,23 @@ describe("when token is valid", () => {
         const result = await server.get(`/hotels/${hotel.id}`).set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(httpStatus.OK)
-        expect(result.body).toMatchObject(
-            expect.arrayContaining([
+        expect(result.body).toEqual({
+            id: expect.any(Number),
+            name: expect.any(String),
+            image: expect.any(String),
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+            Rooms: expect.arrayContaining([
                 expect.objectContaining({
                     id: expect.any(Number),
                     name: expect.any(String),
                     capacity: expect.any(Number),
-                    hotelId: hotel.id
+                    hotelId: expect.any(Number),
+                    createdAt: expect.any(String),
+                    updatedAt: expect.any(String)
                 })
             ])
-        )
+        })
     })
 
 })

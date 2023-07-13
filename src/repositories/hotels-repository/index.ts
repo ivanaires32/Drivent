@@ -1,5 +1,4 @@
 import { prisma } from "@/config";
-import { createHotel } from "../../factories/hotels-factory";
 
 
 async function getHotels() {
