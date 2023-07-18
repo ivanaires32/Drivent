@@ -6,7 +6,7 @@ import * as jwt from "jsonwebtoken"
 import { createEnrollmentWithAddress, createTicket, createTicketType, createUser, generateCreditCardData } from "../factories";
 import { prisma } from "@/config";
 import { cleanDb, generateValidToken } from "../helpers";
-import { createHotel, createTicketHotel } from "../factories/hotels-factory";
+import { createHotel, createTicketHotel, ticketNotHotel } from "../factories/hotels-factory";
 import { TicketStatus } from "@prisma/client";
 
 const server = supertest(app)
@@ -103,14 +103,7 @@ describe("when token is valid", () => {
         const user = await createUser()
         const token = await generateValidToken(user)
         const enrollment = await createEnrollmentWithAddress(user)
-        const ticketType = await prisma.ticketType.create({
-            data: {
-                name: faker.name.findName(),
-                price: faker.datatype.number(),
-                isRemote: true,
-                includesHotel: faker.datatype.boolean(),
-            }
-        })
+        const ticketType = await ticketNotHotel(true, false)
         await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID)
 
         const result = await server.get("/hotels").set("Authorization", `Bearer ${token}`)
@@ -122,14 +115,7 @@ describe("when token is valid", () => {
         const user = await createUser()
         const token = await generateValidToken(user)
         const enrollment = await createEnrollmentWithAddress(user)
-        const ticketType = await prisma.ticketType.create({
-            data: {
-                name: faker.name.findName(),
-                price: faker.datatype.number(),
-                isRemote: faker.datatype.boolean(),
-                includesHotel: false
-            }
-        })
+        const ticketType = await ticketNotHotel(false, false)
         await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID)
 
         const result = await server.get("/hotels").set("Authorization", `Bearer ${token}`)
